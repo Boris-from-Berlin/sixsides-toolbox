@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     title: "AI Toolbox — Kuratierte KI-Tools",
     description: "140+ KI-Tools in 15 Kategorien. Von Content Creation bis Vibecoding.",
   },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/favicon.svg",
+  },
   robots: { index: true, follow: true },
 };
 
