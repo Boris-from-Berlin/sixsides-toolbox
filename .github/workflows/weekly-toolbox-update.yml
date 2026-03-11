@@ -1,0 +1,28 @@
+name: Weekly Toolbox Update Reminder
+
+on:
+  schedule:
+    # Every Monday at 9:00 AM UTC (12:00 Berlin time)
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  create-reminder:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create update reminder issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date();
+            const weekNum = Math.ceil((((today - new Date(today.getFullYear(),0,1)) / 86400000) + new Date(today.getFullYear(),0,1).getDay() + 1) / 7);
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔄 Toolbox Update KW ${weekNum} — Neue AI-Tools recherchieren`,
+              body: `## Wöchentliches Toolbox Update\n\n**Kalenderwoche:** ${weekNum}\n**Datum:** ${today.toISOString().split('T')[0]}\n\n### Aufgaben\n\n- [ ] Neue AI-Tools recherchieren (Product Hunt, Hacker News, Reddit r/artificial)\n- [ ] Tools in passende Kategorien einsortieren\n- [ ] Links und Beschreibungen prüfen\n- [ ] Build testen und deployen\n\n### Quellen zum Prüfen\n\n- [Product Hunt — AI](https://www.producthunt.com/topics/artificial-intelligence)\n- [Hacker News](https://news.ycombinator.com)\n- [Reddit r/artificial](https://reddit.com/r/artificial)\n- [There's An AI For That](https://theresanaiforthat.com)\n- [Future Tools](https://www.futuretools.io)\n\n---\n*Automatisch erstellt von GitHub Actions*`,
+              labels: ['toolbox-update', 'weekly']
+            });
