@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
+import NewsletterWidget from "@/components/NewsletterWidget";
 import {
   Search, ExternalLink, Bot, PenTool, Image, Video,
   Music, Code, Database, GitBranch, Zap, BarChart3,
   Globe, Shield, Workflow, BrainCircuit,
   MessageSquare, BookOpen, Sun, Moon, Box, LayoutGrid,
-  Lightbulb, ArrowRight, Newspaper, Hexagon,
+  Lightbulb, ArrowRight, Newspaper, Hexagon, Mail, Loader2, Check,
 } from "lucide-react";
 
 interface Tool {
@@ -522,30 +523,8 @@ export default function ToolboxPage() {
               </a>
             </div>
 
-            {/* AI Pulse Link */}
-            <div className="bg-bg-alt dark:bg-zinc-900 rounded-2xl border border-border dark:border-zinc-800 p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
-                  <Newspaper className="w-4 h-4 text-white dark:text-zinc-900" />
-                </div>
-                <span className="text-[11px] font-semibold text-text-muted uppercase tracking-widest">News</span>
-              </div>
-              <h3 className="font-bold text-[15px] text-text-primary dark:text-white mb-2 leading-snug">
-                AI Pulse — KI-News
-              </h3>
-              <p className="text-xs text-text-secondary dark:text-zinc-400 mb-4 leading-relaxed">
-                2.500+ KI-Artikel pro Woche aus 11+ Sprachen. Der Newsfeed der Branche.
-              </p>
-              <a
-                href="https://pulse.sixsides-ai.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pill-btn pill-btn-outline inline-flex items-center gap-2 text-sm"
-              >
-                Zum Newsfeed
-                <ArrowRight className="w-4 h-4" />
-              </a>
-            </div>
+            {/* Newsletter Widget */}
+            <NewsletterWidget />
 
             {/* SixSides CTA */}
             <div className="bg-bg-alt dark:bg-zinc-900 rounded-2xl border border-border dark:border-zinc-800 p-6 shadow-sm">
