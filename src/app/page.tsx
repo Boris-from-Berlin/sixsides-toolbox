@@ -2,334 +2,24 @@
 
 import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
+import { useTranslation } from "@/contexts/LanguageContext";
+import { openCookieSettings } from "@/components/CookieBanner";
 import NewsletterWidget from "@/components/NewsletterWidget";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import Link from "next/link";
+import { CATEGORIES } from "@/data/categories";
 import {
-  Search, ExternalLink, Bot, PenTool, Image, Video,
-  Music, Code, Database, GitBranch, Zap, BarChart3,
-  Globe, Shield, Workflow, BrainCircuit,
-  MessageSquare, BookOpen, Sun, Moon, Box, LayoutGrid,
-  Lightbulb, ArrowRight, Newspaper, Hexagon, Mail, Loader2, Check,
+  Search, ExternalLink,
+  Sun, Moon, Box, LayoutGrid, Zap,
+  Lightbulb, ArrowRight, Newspaper, Hexagon, ChevronDown,
 } from "lucide-react";
-
-interface Tool {
-  name: string;
-  url: string;
-  desc: string;
-  tag?: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  tools: Tool[];
-}
-
-const CATEGORIES: Category[] = [
-  {
-    id: "chatbots",
-    name: "AI Chatbots & Assistenten",
-    icon: <MessageSquare className="w-5 h-5" />,
-    color: "#8B5CF6",
-    tools: [
-      { name: "ChatGPT", url: "https://chat.openai.com", desc: "OpenAIs Konversations-KI", tag: "Popular" },
-      { name: "Claude", url: "https://claude.ai", desc: "Anthropics KI-Assistent", tag: "Empfehlung" },
-      { name: "Gemini", url: "https://gemini.google.com", desc: "Googles KI-Modell" },
-      { name: "Perplexity", url: "https://perplexity.ai", desc: "KI-Suchmaschine mit Quellen", tag: "Popular" },
-      { name: "Poe", url: "https://poe.com", desc: "Multi-Modell Chat-Plattform" },
-      { name: "Pi", url: "https://pi.ai", desc: "Persönlicher KI-Assistent von Inflection" },
-      { name: "Mistral Le Chat", url: "https://chat.mistral.ai", desc: "Mistrals Chat-Interface" },
-      { name: "DeepSeek", url: "https://chat.deepseek.com", desc: "Open-Source KI-Chat aus China" },
-      { name: "Grok", url: "https://grok.com", desc: "xAIs Textgenerator" },
-      { name: "Qwen", url: "https://chat.qwenlm.ai/", desc: "Chat-System von Alibaba (kostenlos)" },
-    ],
-  },
-  {
-    id: "content",
-    name: "Content Creation & Text",
-    icon: <PenTool className="w-5 h-5" />,
-    color: "#FB923C",
-    tools: [
-      { name: "Jasper", url: "https://jasper.ai", desc: "KI-Texterstellung für Marketing", tag: "Popular" },
-      { name: "Copy.ai", url: "https://copy.ai", desc: "KI-Copywriting & Workflows" },
-      { name: "Writesonic", url: "https://writesonic.com", desc: "Blog-Posts, Ads & SEO-Texte" },
-      { name: "Rytr", url: "https://rytr.me", desc: "Bezahlbarer KI-Textgenerator" },
-      { name: "Surfer SEO", url: "https://surferseo.com", desc: "SEO-optimierte Content-Erstellung" },
-      { name: "Grammarly", url: "https://grammarly.com", desc: "KI-Schreibassistent & Korrektur" },
-      { name: "Hemingway Editor", url: "https://hemingwayapp.com", desc: "Klarheit & Lesbarkeit verbessern" },
-      { name: "Notion AI", url: "https://notion.so/product/ai", desc: "KI direkt in Notion Docs" },
-      { name: "Wordtune", url: "https://wordtune.com", desc: "Sätze umformulieren & verbessern" },
-      { name: "QuillBot", url: "https://quillbot.com", desc: "Paraphrasierung & Zusammenfassung" },
-    ],
-  },
-  {
-    id: "image",
-    name: "Bildgenerierung & Design",
-    icon: <Image className="w-5 h-5" />,
-    color: "#FB7185",
-    tools: [
-      { name: "Midjourney", url: "https://midjourney.com", desc: "Hochwertige KI-Bilder via Discord", tag: "Popular" },
-      { name: "DALL-E 3", url: "https://openai.com/dall-e-3", desc: "OpenAIs Bildgenerator" },
-      { name: "Stable Diffusion", url: "https://stability.ai", desc: "Open-Source Bildgenerierung" },
-      { name: "Leonardo.ai", url: "https://leonardo.ai", desc: "KI-Bilder für Games & Design" },
-      { name: "Ideogram", url: "https://ideogram.ai", desc: "Text-in-Bild Spezialist" },
-      { name: "Flux", url: "https://flux1.ai", desc: "Schnelle Open-Source Bildgenerierung" },
-      { name: "Adobe Firefly", url: "https://firefly.adobe.com", desc: "KI-Bildgenerierung von Adobe" },
-      { name: "Canva AI", url: "https://canva.com", desc: "Design-Plattform mit KI-Features", tag: "Popular" },
-      { name: "Remove.bg", url: "https://remove.bg", desc: "Hintergrund automatisch entfernen" },
-      { name: "Clipdrop", url: "https://clipdrop.co", desc: "KI-Bildbearbeitung von Stability AI" },
-      { name: "Freepik Pikaso", url: "https://www.freepik.com/pikaso/", desc: "Image Generation, Reimage, Upscale" },
-      { name: "Krea AI", url: "https://www.krea.ai/", desc: "KI-Bildgenerierung" },
-      { name: "reve.art", url: "https://reve.art", desc: "Fotorealistische KI-Bilder", tag: "Empfehlung" },
-      { name: "Napkin", url: "https://www.napkin.ai/", desc: "Text in visuelle Grafiken umwandeln" },
-      { name: "Immersity", url: "https://app.immersity.ai/", desc: "Bewegtbilder & 3D-Effekte aus Fotos" },
-      { name: "Enhancer", url: "https://app.enhancor.ai/editor", desc: "KI-Bilder natürlicher machen" },
-      { name: "Pic Copilot", url: "https://www.picccopilot.com/", desc: "E-Commerce Produktbilder mit KI-Models" },
-    ],
-  },
-  {
-    id: "video",
-    name: "Video & Animation",
-    icon: <Video className="w-5 h-5" />,
-    color: "#EF4444",
-    tools: [
-      { name: "Runway", url: "https://runwayml.com", desc: "KI-Videogenerierung & -bearbeitung", tag: "Popular" },
-      { name: "Sora", url: "https://openai.com/sora", desc: "OpenAIs Text-zu-Video Modell" },
-      { name: "Pika", url: "https://pika.art", desc: "Text & Bild zu Video" },
-      { name: "Kling AI", url: "https://klingai.com", desc: "Realistische KI-Videos" },
-      { name: "HeyGen", url: "https://heygen.com", desc: "KI-Avatare & Video-Personalisierung" },
-      { name: "Synthesia", url: "https://synthesia.io", desc: "KI-Avatar-Videos für Business" },
-      { name: "D-ID", url: "https://d-id.com", desc: "Sprechende KI-Avatare" },
-      { name: "Luma Dream Machine", url: "https://lumalabs.ai", desc: "3D & Video-Generierung" },
-      { name: "Descript", url: "https://descript.com", desc: "Video- & Podcast-Editing mit KI" },
-      { name: "OpusClip", url: "https://opus.pro", desc: "Lange Videos in Clips umwandeln" },
-      { name: "Pixverse", url: "https://app.pixverse.ai/", desc: "Stabile Videos aus Bildern generieren", tag: "Empfehlung" },
-      { name: "Viggle", url: "https://viggle.ai/", desc: "Lipsync und Trend-Videogenerator" },
-      { name: "InVideo", url: "https://ai.invideo.io/", desc: "KI-Videos & Präsentationen erstellen" },
-      { name: "Wan Video", url: "https://create.wan.video/", desc: "Kostenlose Video-Generierung" },
-      { name: "Dreamina", url: "https://dreamina.capcut.com/", desc: "KI-Bilder & Videos von CapCut" },
-      { name: "Captions AI", url: "https://www.captions.ai/", desc: "UGC Content & Produktvideos" },
-      { name: "Rendernet AI", url: "https://rendernet.ai/", desc: "E-Commerce Produktbild-Swap" },
-    ],
-  },
-  {
-    id: "audio",
-    name: "Audio & Musik",
-    icon: <Music className="w-5 h-5" />,
-    color: "#14B8A6",
-    tools: [
-      { name: "ElevenLabs", url: "https://elevenlabs.io", desc: "Realistische KI-Stimmen & TTS", tag: "Popular" },
-      { name: "Suno", url: "https://suno.com", desc: "KI-Musikgenerierung aus Text", tag: "Popular" },
-      { name: "Udio", url: "https://udio.com", desc: "KI-Songs in jeder Stilrichtung" },
-      { name: "Murf AI", url: "https://murf.ai", desc: "Professionelle KI-Voiceovers" },
-      { name: "Play.ht", url: "https://play.ht", desc: "Text-to-Speech API & Studio" },
-      { name: "AIVA", url: "https://aiva.ai", desc: "KI-Filmmusik & Soundtracks" },
-      { name: "Whisper", url: "https://openai.com/research/whisper", desc: "OpenAIs Sprach-zu-Text (Open Source)" },
-      { name: "Resemble AI", url: "https://resemble.ai", desc: "Voice Cloning & generative Stimmen" },
-      { name: "Fish Audio", url: "https://fish.audio/de/", desc: "AI Voice Clone (Beta)" },
-      { name: "Riffusion", url: "https://www.riffusion.com/", desc: "KI-Musikgenerierung" },
-      { name: "VAPI AI", url: "https://vapi.ai", desc: "Voice Call-Center AI" },
-      { name: "NotebookLM", url: "https://notebooklm.google/", desc: "Podcast-Konversation aus Dokumenten" },
-    ],
-  },
-  {
-    id: "vibecoding",
-    name: "Vibecoding & AI IDEs",
-    icon: <Code className="w-5 h-5" />,
-    color: "#06B6D4",
-    tools: [
-      { name: "Cursor", url: "https://cursor.com", desc: "KI-first Code-Editor (VS Code Fork)", tag: "Popular" },
-      { name: "Claude Code", url: "https://docs.anthropic.com/en/docs/claude-code", desc: "Anthropics CLI Coding Agent", tag: "Empfehlung" },
-      { name: "GitHub Copilot", url: "https://github.com/features/copilot", desc: "KI-Pair-Programmer in VS Code", tag: "Popular" },
-      { name: "Windsurf", url: "https://codeium.com/windsurf", desc: "KI-IDE von Codeium" },
-      { name: "Replit", url: "https://replit.com", desc: "Browser-IDE mit KI-Agent" },
-      { name: "v0", url: "https://v0.dev", desc: "Vercels KI-UI-Generator", tag: "Popular" },
-      { name: "bolt.new", url: "https://bolt.new", desc: "Full-Stack Apps im Browser bauen" },
-      { name: "Lovable", url: "https://lovable.dev", desc: "KI-App-Builder (ehem. GPT Engineer)" },
-      { name: "Tabnine", url: "https://tabnine.com", desc: "KI-Code-Completion (privat & sicher)" },
-      { name: "Aider", url: "https://aider.chat", desc: "Open-Source KI Pair-Programming im Terminal" },
-      { name: "Continue", url: "https://continue.dev", desc: "Open-Source KI-Erweiterung für IDEs" },
-      { name: "Devin", url: "https://devin.ai", desc: "Autonomer KI-Software-Entwickler" },
-      { name: "Relume", url: "https://www.relume.io/", desc: "AI Websitebuilder mit UX/UI Frameworks" },
-      { name: "UXPilot", url: "https://uxpilot.ai/", desc: "UI/UX Design mit KI" },
-      { name: "Aura Build", url: "https://www.aura.build/", desc: "Web & Mobile Designs mit KI" },
-      { name: "MGX DEV", url: "https://mgx.dev/", desc: "AI Agent Dev Team" },
-      { name: "Rocket.new", url: "https://www.rocket.new/", desc: "Vibecoding wie Lovable und Bolt" },
-      { name: "Abacus.ai", url: "https://apps.abacus.ai", desc: "App Builder mit KI" },
-      { name: "Firebase Studio", url: "https://studio.firebase.google.com", desc: "Google App-Entwicklung" },
-      { name: "21st.dev", url: "https://21st.dev", desc: "UI Components Library" },
-    ],
-  },
-  {
-    id: "automation",
-    name: "Automatisierung & Workflows",
-    icon: <Workflow className="w-5 h-5" />,
-    color: "#F97316",
-    tools: [
-      { name: "Zapier", url: "https://zapier.com", desc: "No-Code Automatisierung (7.000+ Apps)", tag: "Popular" },
-      { name: "Make", url: "https://make.com", desc: "Visuelle Workflow-Automatisierung" },
-      { name: "n8n", url: "https://n8n.io", desc: "Open-Source Workflow Automation", tag: "Empfehlung" },
-      { name: "Bardeen", url: "https://bardeen.ai", desc: "Browser-Automatisierung mit KI" },
-      { name: "Activepieces", url: "https://activepieces.com", desc: "Open-Source Zapier-Alternative" },
-      { name: "Relevance AI", url: "https://relevanceai.com", desc: "KI-Agent Workforce Builder" },
-      { name: "Lindy.ai", url: "https://lindy.ai", desc: "KI-Assistenten für Workflows" },
-      { name: "Respell", url: "https://respell.ai", desc: "KI-Workflows ohne Code" },
-      { name: "Pabbly", url: "https://pabbly.com", desc: "Automatisierung (günstiger als Make/Zapier)" },
-      { name: "IFTTT", url: "https://ifttt.com", desc: "Einfache Automatisierung" },
-    ],
-  },
-  {
-    id: "agents",
-    name: "AI Agents & Frameworks",
-    icon: <Bot className="w-5 h-5" />,
-    color: "#A78BFA",
-    tools: [
-      { name: "LangChain", url: "https://langchain.com", desc: "Framework für LLM-Anwendungen", tag: "Popular" },
-      { name: "LlamaIndex", url: "https://llamaindex.ai", desc: "Daten-Framework für LLM-Apps" },
-      { name: "CrewAI", url: "https://crewai.com", desc: "Multi-Agent Orchestrierung" },
-      { name: "AutoGen", url: "https://microsoft.github.io/autogen", desc: "Microsofts Multi-Agent Framework" },
-      { name: "Semantic Kernel", url: "https://learn.microsoft.com/semantic-kernel", desc: "Microsofts KI-Orchestration SDK" },
-      { name: "Haystack", url: "https://haystack.deepset.ai", desc: "NLP-Framework für Pipelines" },
-      { name: "Vercel AI SDK", url: "https://sdk.vercel.ai", desc: "TypeScript SDK für KI-Apps" },
-      { name: "Anthropic SDK", url: "https://docs.anthropic.com", desc: "Claude API & Agent SDK" },
-      { name: "Dify", url: "https://dify.ai", desc: "Open-Source LLM App Platform" },
-      { name: "FlowiseAI", url: "https://flowiseai.com", desc: "Drag & Drop LLM Flows" },
-      { name: "OpenRouter", url: "https://openrouter.ai/", desc: "API-Schnittstelle für alle LLMs" },
-      { name: "GoToHuman", url: "https://gotohuman.com", desc: "AI Agent mit Human Oversight" },
-      { name: "Bytez", url: "https://bytez.com/agent", desc: "One API für alle KI-Modelle" },
-    ],
-  },
-  {
-    id: "database",
-    name: "Datenbanken & Backend",
-    icon: <Database className="w-5 h-5" />,
-    color: "#60A5FA",
-    tools: [
-      { name: "Supabase", url: "https://supabase.com", desc: "Open-Source Firebase-Alternative", tag: "Empfehlung" },
-      { name: "Neon", url: "https://neon.tech", desc: "Serverless Postgres" },
-      { name: "PlanetScale", url: "https://planetscale.com", desc: "Serverless MySQL" },
-      { name: "Turso", url: "https://turso.tech", desc: "Edge SQLite (libSQL)" },
-      { name: "Upstash", url: "https://upstash.com", desc: "Serverless Redis & Kafka" },
-      { name: "Pinecone", url: "https://pinecone.io", desc: "Vektor-Datenbank für KI", tag: "Popular" },
-      { name: "Weaviate", url: "https://weaviate.io", desc: "Open-Source Vektor-DB" },
-      { name: "Qdrant", url: "https://qdrant.tech", desc: "Vektor-Suche (Rust-basiert)" },
-      { name: "ChromaDB", url: "https://trychroma.com", desc: "Einfache Vektor-DB für KI-Apps" },
-      { name: "Convex", url: "https://convex.dev", desc: "Reaktive Backend-Plattform" },
-      { name: "Airtable", url: "https://airtable.com/", desc: "Database mit Automatisierungen" },
-      { name: "Google Looker Studio", url: "https://lookerstudio.google.com/", desc: "Datenanalyse und Visualisierung" },
-    ],
-  },
-  {
-    id: "github",
-    name: "GitHub & DevTools",
-    icon: <GitBranch className="w-5 h-5" />,
-    color: "#71717A",
-    tools: [
-      { name: "GitHub Copilot", url: "https://github.com/features/copilot", desc: "KI-Code-Suggestions in GitHub" },
-      { name: "GitHub Actions", url: "https://github.com/features/actions", desc: "CI/CD Automatisierung" },
-      { name: "Vercel", url: "https://vercel.com", desc: "Frontend-Deployment Plattform", tag: "Popular" },
-      { name: "Netlify", url: "https://netlify.com", desc: "Jamstack Hosting & Functions" },
-      { name: "Railway", url: "https://railway.app", desc: "Einfaches Backend-Deployment" },
-      { name: "Render", url: "https://render.com", desc: "Cloud-Hosting für alles" },
-      { name: "Sentry", url: "https://sentry.io", desc: "Error Tracking & Monitoring" },
-      { name: "Linear", url: "https://linear.app", desc: "Modernes Issue Tracking" },
-      { name: "Turborepo", url: "https://turbo.build", desc: "Monorepo Build-System" },
-    ],
-  },
-  {
-    id: "skills",
-    name: "AI Skills & Lernen",
-    icon: <BookOpen className="w-5 h-5" />,
-    color: "#4ADE80",
-    tools: [
-      { name: "Prompt Engineering Guide", url: "https://promptingguide.ai", desc: "Umfassender Prompting-Guide" },
-      { name: "DeepLearning.AI", url: "https://deeplearning.ai", desc: "KI-Kurse von Andrew Ng" },
-      { name: "fast.ai", url: "https://fast.ai", desc: "Praktische Deep-Learning-Kurse" },
-      { name: "Hugging Face", url: "https://huggingface.co", desc: "ML-Modelle, Datasets & Spaces", tag: "Popular" },
-      { name: "Papers with Code", url: "https://paperswithcode.com", desc: "ML-Papers mit Implementierungen" },
-      { name: "Kaggle", url: "https://kaggle.com", desc: "ML-Wettbewerbe & Datasets" },
-      { name: "LangSmith", url: "https://smith.langchain.com", desc: "LLM-Observability & Testing" },
-      { name: "Weights & Biases", url: "https://wandb.ai", desc: "ML-Experiment Tracking" },
-      { name: "Replicate", url: "https://replicate.com", desc: "ML-Modelle per API ausführen" },
-      { name: "LLM Arena", url: "https://lmarena.ai/", desc: "Alle LLMs kostenlos vergleichen" },
-      { name: "Dende", url: "https://app.dende.ai", desc: "Quiz & Education Content erstellen" },
-      { name: "Google AI Studio", url: "https://aistudio.google.com/", desc: "Googles AI Prompt Playground" },
-    ],
-  },
-  {
-    id: "productivity",
-    name: "Produktivität & Business",
-    icon: <Zap className="w-5 h-5" />,
-    color: "#FACC15",
-    tools: [
-      { name: "Notion AI", url: "https://notion.so/product/ai", desc: "KI in Docs, Wikis & Projekten", tag: "Popular" },
-      { name: "Gamma", url: "https://gamma.app", desc: "KI-Präsentationen & Dokumente", tag: "Popular" },
-      { name: "Otter.ai", url: "https://otter.ai", desc: "Meeting-Transkription & Notes" },
-      { name: "Fireflies.ai", url: "https://fireflies.ai", desc: "KI-Meeting-Assistent" },
-      { name: "tl;dv", url: "https://tldv.io", desc: "Meeting-Aufnahmen mit KI-Summary" },
-      { name: "Tome", url: "https://tome.app", desc: "KI-Storytelling & Präsentationen" },
-      { name: "Beautiful.ai", url: "https://beautiful.ai", desc: "KI-gestützte Folien-Erstellung" },
-      { name: "Mem", url: "https://mem.ai", desc: "KI-Notizbuch mit Auto-Organisation" },
-      { name: "Taskade", url: "https://taskade.com", desc: "KI-Produktivität & Projektmanagement" },
-      { name: "Tally", url: "https://tally.so/", desc: "Umfragen mit n8n-Integration" },
-    ],
-  },
-  {
-    id: "marketing",
-    name: "Marketing & SEO",
-    icon: <BarChart3 className="w-5 h-5" />,
-    color: "#EC4899",
-    tools: [
-      { name: "SEMrush", url: "https://semrush.com", desc: "All-in-One SEO & Marketing Suite", tag: "Popular" },
-      { name: "Ahrefs", url: "https://ahrefs.com", desc: "SEO-Tools & Backlink-Analyse" },
-      { name: "Surfer SEO", url: "https://surferseo.com", desc: "On-Page SEO Optimierung" },
-      { name: "Clearscope", url: "https://clearscope.io", desc: "Content-Optimierung für SEO" },
-      { name: "Frase", url: "https://frase.io", desc: "SEO-Content Research & Writing" },
-      { name: "Instantly", url: "https://instantly.ai", desc: "KI-E-Mail-Outreach Plattform" },
-      { name: "Smartly.io", url: "https://smartly.io", desc: "KI-gesteuerte Social Ads" },
-      { name: "AdCreative.ai", url: "https://adcreative.ai", desc: "KI-generierte Werbeanzeigen" },
-      { name: "Brandwatch", url: "https://brandwatch.com", desc: "Social Listening & Analytics" },
-      { name: "Mailchimp", url: "https://mailchimp.com", desc: "E-Mail Marketing & Automatisierung" },
-      { name: "Brevo", url: "https://www.brevo.com/", desc: "E-Mail Marketing & Automatisierung" },
-    ],
-  },
-  {
-    id: "data",
-    name: "Daten & Research",
-    icon: <BrainCircuit className="w-5 h-5" />,
-    color: "#14B8A6",
-    tools: [
-      { name: "Perplexity", url: "https://perplexity.ai", desc: "KI-Research mit Quellenangaben" },
-      { name: "Elicit", url: "https://elicit.com", desc: "KI-Forschungsassistent" },
-      { name: "Consensus", url: "https://consensus.app", desc: "Wissenschaftliche Papers durchsuchen" },
-      { name: "Scite.ai", url: "https://scite.ai", desc: "Smart Citations für Forschung" },
-      { name: "Connected Papers", url: "https://connectedpapers.com", desc: "Visuelle Paper-Exploration" },
-      { name: "Julius AI", url: "https://julius.ai", desc: "KI-Datenanalyse & Visualisierung" },
-      { name: "Rows", url: "https://rows.com", desc: "Spreadsheets mit KI-Integration" },
-      { name: "Apify", url: "https://apify.com/", desc: "Web Scraping Plattform" },
-    ],
-  },
-  {
-    id: "security",
-    name: "Sicherheit & Compliance",
-    icon: <Shield className="w-5 h-5" />,
-    color: "#F43F5E",
-    tools: [
-      { name: "Snyk", url: "https://snyk.io", desc: "Code & Dependency Security" },
-      { name: "Socket", url: "https://socket.dev", desc: "Supply Chain Security" },
-      { name: "GitGuardian", url: "https://gitguardian.com", desc: "Secrets Detection in Code" },
-      { name: "Lakera Guard", url: "https://lakera.ai", desc: "LLM Security & Prompt Protection" },
-      { name: "Nightfall AI", url: "https://nightfall.ai", desc: "Data Loss Prevention mit KI" },
-      { name: "Pangea", url: "https://pangea.cloud", desc: "Security APIs für KI-Apps" },
-    ],
-  },
-];
 
 export default function ToolboxPage() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const filtered = CATEGORIES.map((cat) => ({
     ...cat,
@@ -433,6 +123,9 @@ export default function ToolboxPage() {
           </h2>
           <p className="text-text-secondary dark:text-zinc-400 text-sm max-w-lg mx-auto animate-fade-up" style={{ animationDelay: "0.1s" }}>
             {totalTools}+ kuratierte KI-Tools in {CATEGORIES.length} Kategorien — von Content Creation bis Vibecoding.
+          </p>
+          <p className="text-xs text-text-muted mt-3 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            Zuletzt aktualisiert: März 2026
           </p>
         </div>
       </section>
@@ -601,6 +294,11 @@ export default function ToolboxPage() {
                       {cat.tools.length}
                     </span>
                   </div>
+                  {cat.intro && (
+                    <p className="text-sm text-text-secondary dark:text-zinc-400 leading-relaxed mb-4 max-w-3xl">
+                      {cat.intro}
+                    </p>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                     {cat.tools.map((tool) => (
                       <a
@@ -649,6 +347,126 @@ export default function ToolboxPage() {
         </div>
       </div>
 
+      {/* FAQ Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-8">
+        <div className="bg-bg-alt dark:bg-zinc-900 rounded-2xl border border-border dark:border-zinc-800 p-8">
+          <h3 className="text-xl font-bold text-text-primary dark:text-white mb-6">
+            H&auml;ufig gestellte Fragen
+          </h3>
+          <div className="space-y-2">
+            {[
+              {
+                q: "Was ist die AI Toolbox?",
+                a: "Ein kuratiertes Verzeichnis von 177+ KI-Tools in 15 Kategorien, betrieben von SixSides-ai.org. Wir helfen Ihnen, das richtige KI-Werkzeug f\u00fcr Ihre Anforderungen zu finden.",
+              },
+              {
+                q: "Wie werden die Tools ausgew\u00e4hlt?",
+                a: "Redaktionelle Kuratierung basierend auf Qualit\u00e4t, N\u00fctzlichkeit und Relevanz. Die Toolbox wird w\u00f6chentlich aktualisiert, um neue Tools aufzunehmen und bestehende Eintr\u00e4ge zu \u00fcberpr\u00fcfen.",
+              },
+              {
+                q: "Welche KI-Tools eignen sich f\u00fcr Einsteiger?",
+                a: "ChatGPT, Claude, Canva AI und Gamma sind besonders einsteigerfreundlich. Sie bieten intuitive Oberfl\u00e4chen und erfordern keine technischen Vorkenntnisse.",
+              },
+              {
+                q: "Was ist Vibecoding?",
+                a: "Ein neuer Ansatz zur Softwareentwicklung, bei dem KI-gest\u00fctzte IDEs wie Cursor, Claude Code und v0 den Gro\u00dfteil des Codes generieren. Der Entwickler beschreibt in nat\u00fcrlicher Sprache, was gebaut werden soll.",
+              },
+              {
+                q: "Sind die Tools kostenlos?",
+                a: "Viele Tools bieten kostenlose Versionen oder Freemium-Modelle. Die Beschreibungen in unserer Toolbox enthalten Hinweise zur Preisgestaltung.",
+              },
+              {
+                q: "Wie kann ich ein Tool vorschlagen?",
+                a: "Kontaktieren Sie uns unter info@sixsides-ai.org. Wir pr\u00fcfen jeden Vorschlag und nehmen qualitativ hochwertige Tools gerne in unsere Sammlung auf.",
+              },
+            ].map((faq, i) => (
+              <div
+                key={i}
+                className="border border-border dark:border-zinc-800 rounded-xl overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold text-text-primary dark:text-zinc-100 hover:bg-surface/50 dark:hover:bg-zinc-800/50 transition-colors"
+                >
+                  {faq.q}
+                  <ChevronDown
+                    className={`w-4 h-4 shrink-0 text-text-muted transition-transform duration-200 ${
+                      openFaq === i ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-4 text-sm text-text-secondary dark:text-zinc-400 leading-relaxed">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "Was ist die AI Toolbox?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Ein kuratiertes Verzeichnis von 177+ KI-Tools in 15 Kategorien, betrieben von SixSides-ai.org.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Wie werden die Tools ausgew\u00e4hlt?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Redaktionelle Kuratierung basierend auf Qualit\u00e4t, N\u00fctzlichkeit und Relevanz. W\u00f6chentlich aktualisiert.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Welche KI-Tools eignen sich f\u00fcr Einsteiger?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "ChatGPT, Claude, Canva AI und Gamma sind besonders einsteigerfreundlich.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Was ist Vibecoding?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Ein neuer Ansatz zur Softwareentwicklung, bei dem KI-gest\u00fctzte IDEs wie Cursor, Claude Code und v0 den Gro\u00dfteil des Codes generieren.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Sind die Tools kostenlos?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Viele Tools bieten kostenlose Versionen oder Freemium-Modelle. Die Beschreibungen enthalten Hinweise zur Preisgestaltung.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Wie kann ich ein Tool vorschlagen?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Kontaktieren Sie uns unter info@sixsides-ai.org.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
       {/* Footer CTA */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-8">
         <div className="bg-bg-alt dark:bg-zinc-900 rounded-2xl border border-border dark:border-zinc-800 p-8 text-center">
@@ -677,27 +495,56 @@ export default function ToolboxPage() {
 
       {/* Footer */}
       <footer className="border-t border-border dark:border-zinc-800 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-text-muted">
-            {new Date().getFullYear()} SixSides-ai.org
-          </p>
-          <div className="flex items-center gap-4">
-            <a
-              href="https://pulse.sixsides-ai.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
-            >
-              AI Pulse
-            </a>
-            <a
-              href="https://sixsides-ai.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
-            >
-              SixSides-AI
-            </a>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-text-muted">
+              &copy; {new Date().getFullYear()} SixSides-ai.org
+            </p>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <Link
+                href="/impressum"
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                {t("footer.impressum")}
+              </Link>
+              <Link
+                href="/datenschutz"
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                {t("footer.datenschutz")}
+              </Link>
+              <Link
+                href="/about"
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                &Uuml;ber uns
+              </Link>
+              <button
+                onClick={openCookieSettings}
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                {t("footer.cookieSettings")}
+              </button>
+              <span className="text-border dark:text-zinc-700">|</span>
+              <a
+                href="https://pulse.sixsides-ai.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                AI Pulse
+              </a>
+              <a
+                href="https://sixsides-ai.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-text-muted hover:text-text-primary dark:hover:text-zinc-100 transition-colors"
+              >
+                SixSides-AI
+              </a>
+              <span className="text-border dark:text-zinc-700">|</span>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </footer>
